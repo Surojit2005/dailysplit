@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workout Day</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --accent: #4a6cf7;
+    }
+
+    .dark {
+      --bg: #0f1115;
+      --card: #1a1d23;
+      --text: #e6e6e6;
+      --accent: #7396ff;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 480px;
+      background: var(--card);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      text-align: center;
+      transform: translateY(20px);
+      opacity: 0;
+      animation: fadeUp 0.7s forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .day {
+      font-size: 1.4rem;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .muscle {
+      font-size: 1.2rem;
+      opacity: 0.85;
+      margin-bottom: 25px;
+    }
+
+    button {
+      padding: 12px 22px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.15s ease;
+    }
+    button:active { transform: scale(0.95); }
+
+    #settings {
+      margin-top: 25px;
+      text-align: left;
+      display: none;
+      animation: fadeUp 0.5s;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 9px;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+      margin-bottom: 10px;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .toggle-row {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Today's Workout</h1>
+    <div id="dayDisplay" class="day"></div>
+    <div id="muscleDisplay" class="muscle"></div>
+
+    <button onclick="toggleSettings()">Settings</button>
+
+    <div class="toggle-row">
+      <span>Dark Mode</span>
+      <button onclick="toggleDarkMode()">Toggle</button>
+    </div>
+
+    <div id="settings">
+      <h2>Edit Workout Cycle</h2>
+      <p>Enter your cycle (each line = next day's workout). Sundays will auto become rest.</p>
+      <textarea id="cycleInput" rows="7"></textarea>
+      <button onclick="saveCycle()">Save Cycle</button>
+    </div>
+  </div>
+
+  <script>
+    function loadCycle() {
+      const saved = localStorage.getItem("cycle");
+      if (saved) return JSON.parse(saved);
+
+      return [
+        "chest and shoulders",
+        "legs and abs",
+        "back rear delts and traps",
+        "bicep triceps and forearms"
+      ];
+    }
+
+    function computeWorkout() {
+      const cycle = loadCycle();
+      const today = new Date();
+      const weekday = today.getDay();
+
+      const weekdayNames = [
+        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+      ];
+
+      document.getElementById("dayDisplay").textContent = weekdayNames[weekday];
+
+      if (weekday === 0) {
+        document.getElementById("muscleDisplay").textContent = "Rest";
+        return;
+      }
+
+      const daysPassed = Math.floor((today - new Date(today.getFullYear(),0,1)) / 86400000);
+      const index = (daysPassed % cycle.length);
+
+      document.getElementById("muscleDisplay").textContent = cycle[index];
+    }
+
+    function toggleSettings() {
+      const s = document.getElementById("settings");
+      s.style.display = s.style.display === "none" ? "block" : "none";
+      const cycle = loadCycle();
+      document.getElementById("cycleInput").value = cycle.join("
+");
+    }
+
+    function saveCycle() {
+      const lines = document.getElementById("cycleInput").value.split("
+").map(x => x.trim()).filter(x => x);
+      localStorage.setItem("cycle", JSON.stringify(lines));
+      computeWorkout();
+      alert("New workout cycle saved!");
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("darkMode", document.body.classList.contains("dark") ? "1" : "0");
+    }
+
+    if (localStorage.getItem("darkMode") === "1") document.body.classList.add("dark");
+
+    computeWorkout();
+  </script>
+</body>
+</html>
